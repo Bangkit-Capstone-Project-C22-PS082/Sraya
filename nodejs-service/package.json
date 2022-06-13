@@ -1,0 +1,22 @@
+{
+  "name": "nodejs-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bangkit-Capstone-Project-C22-PS082/Sraya.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Bangkit-Capstone-Project-C22-PS082/Sraya/issues"
+  },
+  "homepage": "https://github.com/Bangkit-Capstone-Project-C22-PS082/Sraya#readme",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
+}
