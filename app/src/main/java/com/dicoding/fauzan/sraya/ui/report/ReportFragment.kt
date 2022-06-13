@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import com.dicoding.fauzan.sraya.R
 import com.dicoding.fauzan.sraya.ReportDialogFragment
 import com.dicoding.fauzan.sraya.databinding.FragmentReportBinding
 import com.dicoding.fauzan.sraya.uriToFile
@@ -64,11 +65,15 @@ class ReportFragment : Fragment() {
             launcherGallery.launch(chooser)
         }
         binding.btnReportCreate.setOnClickListener {
+
             val report = hashMapOf(
                 "Kronologi" to binding.etReportHow.text.toString(),
                 "When" to binding.etReportWhen.text.toString(),
                 "Where" to binding.etReportWhere.text.toString())
             val reportDialogFragment = ReportDialogFragment()
+            val bundle = Bundle()
+            bundle.putString(ReportDialogFragment.EXTRA_COMPLAINT, binding.etReportHow.text.toString())
+            reportDialogFragment.arguments = bundle
             reportDialogFragment.show(childFragmentManager, ReportDialogFragment::class.java.simpleName)
             database.collection("SrayaData")
                 .document("report")
@@ -79,6 +84,10 @@ class ReportFragment : Fragment() {
                 Log.w(TAG, "An error occured", it)
             }
         }
+        binding.etReportHow.text.clear()
+        binding.etReportWhere.text.clear()
+        binding.etReportWhen.text.clear()
+        binding.ivReportPhoto.setImageResource(R.drawable.ic_baseline_image_24)
     }
     override fun onDestroyView() {
         super.onDestroyView()

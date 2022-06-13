@@ -30,12 +30,14 @@
         android:text="@string/ditujukan_kepada"
         />
     <TextView
+        android:id="@+id/tv_report_dialog_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="@string/waktu"
         />
     <TextView
+        android:id="@+id/tv_report_dialog_complaint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"

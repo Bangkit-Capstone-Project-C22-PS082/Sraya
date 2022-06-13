@@ -3,6 +3,8 @@ package com.dicoding.fauzan.sraya.ui.protection
 import android.Manifest
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
+import android.content.Context
+import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.location.Geocoder
@@ -17,8 +19,14 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.work.*
+import com.dicoding.fauzan.sraya.MyService
 import com.dicoding.fauzan.sraya.MyWorker
 import com.dicoding.fauzan.sraya.R
 import com.dicoding.fauzan.sraya.databinding.FragmentProtectionBinding
@@ -30,11 +38,17 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class ProtectionFragment : Fragment(), OnMapReadyCallback {
 
+    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("session")
     private lateinit var workManger: WorkManager
     private lateinit var periodicWorkRequest: PeriodicWorkRequest
     private lateinit var mMap: GoogleMap
@@ -45,7 +59,8 @@ class ProtectionFragment : Fragment(), OnMapReadyCallback {
     private var _binding: FragmentProtectionBinding? = null
     private lateinit var database: FirebaseFirestore
     private lateinit var locationCoordinates: LatLng
-
+    private lateinit var viewModel: ProtectionViewModel
+    private var isRunning = false
     private var requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()) {
         when {
@@ -89,41 +104,56 @@ class ProtectionFragment : Fragment(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        workManger = WorkManager.getInstance(requireActivity())
 
-        val data = Data.Builder()
 
-            .build()
+        /*
+        viewModel = ViewModelProvider(
+            this,
+            ProtectionViewModelFactory.getInstance(
+                dataStore))[ProtectionViewModel::class.java]
 
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
 
-        val periodicWorkRequest = PeriodicWorkRequest
-            .Builder(MyWorker::class.java, 15L, TimeUnit.MINUTES)
-            .setInputData(data)
-            .setConstraints(constraints)
-            .build()
+         */
+        database = Firebase.firestore
 
-        workManger.enqueue(periodicWorkRequest)
-        workManger.getWorkInfoByIdLiveData(periodicWorkRequest.id).observe(
-            requireActivity()
-        ) {
-            if (it.state == WorkInfo.State.RUNNING) {
 
-            }
-        }
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         binding.btnProtectionProtect.setOnClickListener {
-            // TODO: Replace value with the corresponding data type from Firestore
-
-
-            val geocoder = Geocoder(requireActivity())
-                .getFromLocation(locationCoordinates.latitude, locationCoordinates.longitude, 5)
-
+            var locationName = ""
+            if (Geocoder.isPresent()) {
+                val geocoder = Geocoder(requireActivity())
+                    .getFromLocation(locationCoordinates.latitude, locationCoordinates.longitude, 5)
+                val address = geocoder.first()
+                locationName = "${address.thoroughfare} ${address.subThoroughfare}, " +
+                        "${address.subLocality}, ${address.subAdminArea}, ${address.adminArea}" +
+                        " ${address.postalCode}"
+                Log.d(TAG, "Admin Area: ${address.adminArea}")
+                Log.d(TAG, "Country name: ${address.countryName}")
+                Log.d(TAG, "Feature name: ${address.featureName}")
+                Log.d(TAG, "Country code: ${address.countryCode}")
+                Log.d(TAG, "Locality: ${address.locality}")
+                Log.d(TAG, "Postal code: ${address.postalCode}")
+                Log.d(TAG, "Premises: ${address.premises}")
+                Log.d(TAG, "Sub admin area: ${address.subAdminArea}")
+                Log.d(TAG, "Sub locality: ${address.subLocality}")
+                Log.d(TAG, "Sub thorugh fare: ${address.subThoroughfare}")
+                Log.d(TAG, "Through fare: ${address.thoroughfare}")
+            }
+            Log.d(TAG, locationName)
+            val geoPoint = GeoPoint(locationCoordinates.latitude, locationCoordinates.longitude)
             val location = hashMapOf(
-                "GPS" to "0",
-                "Location" to "0",
-                "Time" to "0")
+                "GPS" to geoPoint,
+                "Location" to locationName,
+                "Time" to Timestamp(Date()))
+            val protection = hashMapOf(
+                "Geolokasi" to geoPoint,
+                "NIK" to "0",
+                "Nama" to "0"
+            )
             database.collection("SrayaData")
                 .document("location")
                 .set(location)
@@ -133,10 +163,31 @@ class ProtectionFragment : Fragment(), OnMapReadyCallback {
                 .addOnFailureListener {
                     Log.w(TAG, "An error occured", it)
                 }
+            database.collection("ReportProtection")
+                .add(protection)
+                .addOnSuccessListener {
+                    Log.d(TAG, "Successfully added a document!")
+                }
+                .addOnFailureListener {
+                    Log.w(TAG, "An error occured", it)
+                }
+            Toast.makeText(
+                requireActivity(),
+                "Panic button telah ditekan. Lokasi telah dikirim",
+                Toast.LENGTH_SHORT).show()
         }
-
-
-        return binding.root
+        binding.btnProtectionToggle.setOnClickListener {
+            val serviceIntent = Intent(requireActivity(), MyService::class.java)
+            if (!isRunning) {
+                binding.btnProtectionToggle.setText("Off")
+                view.context.startService(serviceIntent)
+                isRunning = true
+            } else {
+                binding.btnProtectionToggle.setText("On")
+                view.context.stopService(serviceIntent)
+                isRunning = false
+            }
+        }
     }
 
 
@@ -171,7 +222,9 @@ class ProtectionFragment : Fragment(), OnMapReadyCallback {
 
     override fun onPause() {
         super.onPause()
-        stopLocationUpdates()
+        if (isReady) {
+            stopLocationUpdates()
+        }
     }
     override fun onDestroyView() {
         super.onDestroyView()
@@ -251,6 +304,9 @@ class ProtectionFragment : Fragment(), OnMapReadyCallback {
     private fun stopLocationUpdates() {
         fusedLocationProviderClient.removeLocationUpdates(locationCallback)
     }
+
+
+
 
     companion object {
         private const val TAG = "ProtectionFragment"

@@ -23,14 +23,20 @@ class ReportDialogFragment : DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val bundle = arguments
+
         binding.btnReportDialogOk.setOnClickListener {
             dialog?.dismiss()
         }
+        binding.tvReportDialogTime.setText("Waktu: ${Time.getTimeFormat()}")
+        binding.tvReportDialogComplaint.setText("Keluhan: ${bundle?.getString(EXTRA_COMPLAINT)}")
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-
+    companion object {
+        const val EXTRA_COMPLAINT = "extra_complaint"
+    }
 }

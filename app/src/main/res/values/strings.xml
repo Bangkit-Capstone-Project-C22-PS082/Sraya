@@ -20,7 +20,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="laporan_telah_dibuat">Laporan telah dibuat</string>
     <string name="silahkan_ditunggu_kelanjutannya">Silahkan ditunggu kelanjutannya</string>
-    <string name="ditujukan_kepada">Ditujukan kepada:</string>
+    <string name="ditujukan_kepada">Ditujukan kepada: pihak berwajib</string>
     <string name="waktu">Waktu:</string>
     <string name="keluhan">Keluhan:</string>
     <string name="ok">Ok</string>
@@ -56,4 +56,5 @@
     <string name="ketlogin">Belum Memiliki Akun ?</string>
     <string name="laki_laki">Laki-Laki</string>
     <string name="perempuan">Perempuan</string>
+    <string name="on">On</string>
 </resources>

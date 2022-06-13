@@ -23,18 +23,23 @@ class MyWorker(context: Context, workerParameters: WorkerParameters ) : Worker(c
         val notificationManager = applicationContext
             .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notificationCompat = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-
+            .setContentTitle("")
+            .setContentText("")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // val notificationChannel = NotificationChannel()
+            val notificationChannel =
+                NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
 
         }
+        notificationManager.notify(NOTIFICATION_ID, notificationCompat)
     }
     companion object {
         private val TAG = MyWorker::class.java.simpleName
         private const val NOTIFICATION_ID = 1
-        private const val CHANNEL_ID = ""
+        private const val CHANNEL_ID = "channel_1"
+        private const val CHANNEL_NAME = ""
     }
 
 }

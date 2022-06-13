@@ -1,12 +1,18 @@
 package com.dicoding.fauzan.sraya
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.ViewModelProvider
 import com.dicoding.fauzan.sraya.databinding.ActivityLoginBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -17,12 +23,19 @@ import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class LoginActivity : AppCompatActivity() {
+    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("session")
     private lateinit var binding: ActivityLoginBinding
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var firebaseAuth: FirebaseAuth
+
+    private lateinit var viewModel: LoginViewModel
+    private lateinit var database: FirebaseFirestore
+    private lateinit var sessionPreferences: SessionPreferences
 
     private val signInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()) {
@@ -62,6 +75,12 @@ class LoginActivity : AppCompatActivity() {
 
         supportActionBar?.hide()
 
+        /*
+        viewModel = ViewModelProvider(
+            this, LoginViewModelFactory.getInstance(dataStore))[LoginViewModel::class.java]
+
+         */
+        database = Firebase.firestore
         setupAction()
 
         val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -78,7 +97,6 @@ class LoginActivity : AppCompatActivity() {
 
         binding.btnLogin.setOnClickListener {
             val email = binding.edtEmaillogin.text.toString()
-            val nohp = binding.edtNohp.text.toString()
             val password = binding.edtPasswd.text.toString()
 
             if (email.isEmpty()){
@@ -93,11 +111,6 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            if (nohp.isEmpty()){
-                binding.edtNohp.error = "No Handphone Harus Diisi!"
-                binding.edtNohp.requestFocus()
-                return@setOnClickListener
-            }
 
             if (password.isEmpty()){
                 binding.edtPasswd.error = "Password Harus Diisi!"
@@ -105,17 +118,30 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            LoginFirebase(email,password,nohp)
+            LoginFirebase(email,password)
+            // viewModel.loginFirebase(firebaseAuth, email, password)
         }
 
 
     }
 
-    private fun LoginFirebase(email: String, password: String, nohp: String) {
+    private fun LoginFirebase(email: String, password: String,) {
+
         firebaseAuth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this){
                 if (it.isSuccessful){
                     Toast.makeText(this, "Selamat Datang $email", Toast.LENGTH_SHORT).show()
+                    database.collection("Users").whereEqualTo("Email", email).get()
+                        .addOnSuccessListener { documents ->
+                            for (document in documents) {
+                                Log.d(TAG, "${document.get("NIK")}, ${document.get("Nama")}")
+
+                            }
+                        }
+                        .addOnFailureListener { exception ->
+                            Log.e(TAG, exception.message.toString())
+                        }
+
                     val intent = Intent(this,HomeActivity::class.java)
                     startActivity(intent)
                 }
@@ -123,6 +149,9 @@ class LoginActivity : AppCompatActivity() {
                     Toast.makeText(this, "${it.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
             }
+
+
+
     }
 
 

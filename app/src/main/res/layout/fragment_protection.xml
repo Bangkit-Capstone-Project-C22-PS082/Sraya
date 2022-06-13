@@ -23,4 +23,13 @@
         android:src="@drawable/ic_shield_fill"
         android:backgroundTint="@color/lime"
         android:contentDescription="Call a help" />
+
+    <Button
+        android:id="@+id/btn_protection_toggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_anchor="@id/map"
+        app:layout_anchorGravity="top|center_horizontal"
+        android:text="@string/on"
+        />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

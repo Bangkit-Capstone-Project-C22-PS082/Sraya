@@ -66,9 +66,17 @@ class TellFragment : Fragment() {
             )
             binding.rvTellMessage.scrollToPosition(messagingAdapter.itemCount - 1)
 
-
         }
+        // For initializing message
+        messagesList.add(Message(
+            Constants.RECEIVE_ID,
+            "Hai. Apa ada yang bisa saya bantu",
+            Time.getTimeFormat()))
+        messagingAdapter.submitList(messagesList)
+        binding.rvTellMessage.scrollToPosition(messagingAdapter.itemCount - 1)
     }
+
+
 
     override fun onDestroyView() {
         super.onDestroyView()

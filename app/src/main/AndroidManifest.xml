@@ -18,6 +18,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Sraya">
+        <service
+            android:name=".MyService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="location|microphone"/>
         <activity
             android:name=".SplashScreenActivity"
             android:exported="false" >
